@@ -5,11 +5,17 @@ import { Canvas, CanvasProps, useCanvas } from "./Canvas";
 import { rainbowRopes } from "./sketches/01-rainbowRopes";
 import { lightningTree } from "./sketches/02-lightningTree";
 import { polygonTiles } from "./sketches/03-polygonTiles";
+import { vectors } from "./sketches/04-vectors";
+import { rayBounce } from "./sketches/05-rayBounce";
+import { rayBounceWithObjects } from "./sketches/05-rayBounceWithObjects";
 
 const sketches: ((context: CanvasRenderingContext2D) => void)[] = [
   (ctx) => rainbowRopes(ctx.canvas.width, ctx.canvas.height, ctx),
   (ctx) => lightningTree(ctx.canvas.width, ctx.canvas.height, ctx),
   (ctx) => polygonTiles(ctx),
+  (ctx) => vectors(ctx),
+  (ctx) => rayBounce(ctx),
+  (ctx) => rayBounceWithObjects(ctx),
 ];
 
 export default function Home() {

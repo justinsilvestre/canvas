@@ -1,4 +1,4 @@
-import { distance, GridPoint, intId } from "../Grid";
+import { distance, GridPoint } from "../Grid";
 
 class Vector {
   constructor(public x: number, public y: number) {}
@@ -9,13 +9,21 @@ class Vector {
 }
 
 class Polygon {
-  id = intId();
-  constructor(public vertices: GridPoint[], public center: GridPoint) {}
+  constructor(
+    public id: number,
+    public vertices: GridPoint[],
+    public center: GridPoint
+  ) {}
 }
 
 export function polygonTiles(context: CanvasRenderingContext2D) {
   const cache: Map<number, Polygon> = new Map();
   const verticesToPolygons: Map<number, Map<number, Set<Polygon>>> = new Map();
+
+  let id = 0;
+  function intId() {
+    return id++;
+  }
 
   const width = context.canvas.width;
   const height = context.canvas.height;
@@ -24,6 +32,7 @@ export function polygonTiles(context: CanvasRenderingContext2D) {
   const startRadius = 70;
   const startSidesCount = 5;
   const startPolygon = createPolygon(
+    intId(),
     gridCenter,
     startRadius,
     startSidesCount,
@@ -56,6 +65,7 @@ export function polygonTiles(context: CanvasRenderingContext2D) {
 
     layer2.push(
       continuePolygon(
+        intId(),
         newPolygonBaseVertices,
         newCenter,
         startRadius,
@@ -88,6 +98,7 @@ export function polygonTiles(context: CanvasRenderingContext2D) {
       );
 
       continuePolygon(
+        intId(),
         newPolygonBaseVertices,
         newCenter,
         startRadius,
@@ -159,6 +170,7 @@ function drawPolygon(
 }
 
 function createPolygon(
+  id: number,
   center: GridPoint,
   radius: number,
   sides: number,
@@ -174,7 +186,7 @@ function createPolygon(
     const y = center.y + Math.sin(angle) * radius;
     vertices.push(new GridPoint(x, y));
   }
-  const polygon = new Polygon(vertices, center);
+  const polygon = new Polygon(id, vertices, center);
 
   cache.set(polygon.id, polygon);
   for (const vertex of vertices) {
@@ -194,6 +206,7 @@ function createPolygon(
 }
 
 function continuePolygon(
+  id: number,
   /** at least two */
   baseVertices: GridPoint[],
   center: GridPoint,
@@ -218,7 +231,7 @@ function continuePolygon(
     const y = center.y + Math.sin(angle) * radius;
     newVertices.push(new GridPoint(x, y));
   }
-  const polygon = new Polygon(newVertices, center);
+  const polygon = new Polygon(id, newVertices, center);
   cache.set(polygon.id, polygon);
   for (const vertex of newVertices) {
     verticesToPolygons.set(
