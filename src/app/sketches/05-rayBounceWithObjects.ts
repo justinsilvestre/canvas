@@ -1,6 +1,7 @@
 import {
   CollisionGrid,
   drawLine,
+  getRandomCoordinates,
   getRandomVelocity,
   HslaColor,
   Line,
@@ -10,21 +11,18 @@ import {
 } from "./05-rayBounce";
 
 export function rayBounceWithObjects(context: CanvasRenderingContext2D) {
-  // clear canvas
-  context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-
   let nextId = 0;
   function entityId() {
     return nextId++;
   }
 
   const grid = new CollisionGrid(context.canvas.width, context.canvas.height);
-  const rays: Vector[] = [
-    getRandomVelocity(),
-    getRandomVelocity(),
-    getRandomVelocity(),
-    getRandomVelocity(),
-    getRandomVelocity(),
+  const rays = [
+    { ray: getRandomVelocity(), origin: getRandomCoordinates(context) },
+    { ray: getRandomVelocity(), origin: getRandomCoordinates(context) },
+    { ray: getRandomVelocity(), origin: getRandomCoordinates(context) },
+    { ray: getRandomVelocity(), origin: getRandomCoordinates(context) },
+    { ray: getRandomVelocity(), origin: getRandomCoordinates(context) },
   ];
 
   const bounds = [
@@ -64,30 +62,21 @@ export function rayBounceWithObjects(context: CanvasRenderingContext2D) {
         context.canvas.height / 2
       ),
       300,
-      4
+      4,
+      Math.random() * ((Math.PI * 2) / 4)
     ),
-    // Polygon.regular(
-    //   entityId,
-    //   getRandomPosition(
-    //     -context.canvas.width / 2,
-    //     context.canvas.width / 2,
-    //     -context.canvas.height / 2,
-    //     context.canvas.height / 2
-    //   ),
-    //   200,
-    //   3
-    // ),
-    // Polygon.regular(
-    //   entityId,
-    //   getRandomPosition(
-    //     -context.canvas.width / 2,
-    //     context.canvas.width / 2,
-    //     -context.canvas.height / 2,
-    //     context.canvas.height / 2
-    //   ),
-    //   50,
-    //   4
-    // ),
+    Polygon.regular(
+      entityId,
+      getRandomPosition(
+        -context.canvas.width / 2,
+        context.canvas.width / 2,
+        -context.canvas.height / 2,
+        context.canvas.height / 2
+      ),
+      400,
+      3,
+      Math.random() * ((Math.PI * 2) / 3)
+    ),
   ];
 
   for (const bound of bounds) {
@@ -101,10 +90,12 @@ export function rayBounceWithObjects(context: CanvasRenderingContext2D) {
     }
   }
 
-  for (const ray of rays) {
+  drawGridCollisionPoints(context, grid);
+
+  for (const { ray, origin } of rays) {
     traceRayWithDots({
       context,
-      start: Vector.zero,
+      start: origin,
       startVelocity: ray,
       dotsCount: 10000,
       startColor: HslaColor.random(),
@@ -113,8 +104,6 @@ export function rayBounceWithObjects(context: CanvasRenderingContext2D) {
       canvasContext: context,
     });
   }
-
-  drawGridCollisionPoints(context, grid);
 }
 
 class Polygon {
@@ -143,13 +132,12 @@ class Polygon {
     getId: () => number,
     center: Vector,
     radius: number,
-    sidesCount: number
+    sidesCount: number,
+    rotationRadians = 0
   ) {
-    const rotation = Math.PI / 4;
-
     const vertices = [];
     for (let i = 0; i < sidesCount; i++) {
-      const angle = (i * Math.PI * 2) / sidesCount + rotation;
+      const angle = (i * Math.PI * 2) / sidesCount + rotationRadians;
       const x = center.x + radius * Math.cos(angle);
       const y = center.y + radius * Math.sin(angle);
       vertices.push(Vector.gridCoordinates(x, y));

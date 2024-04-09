@@ -6,11 +6,11 @@ export function rayBounce(context: CanvasRenderingContext2D) {
 
   const grid = new CollisionGrid(context.canvas.width, context.canvas.height);
   const rays = [
-    getRandomVelocity(),
-    getRandomVelocity(),
-    getRandomVelocity(),
-    getRandomVelocity(),
-    getRandomVelocity(),
+    { ray: getRandomVelocity(), origin: getRandomCoordinates(context) },
+    { ray: getRandomVelocity(), origin: getRandomCoordinates(context) },
+    { ray: getRandomVelocity(), origin: getRandomCoordinates(context) },
+    { ray: getRandomVelocity(), origin: getRandomCoordinates(context) },
+    { ray: getRandomVelocity(), origin: getRandomCoordinates(context) },
   ];
 
   const bounds = [
@@ -45,10 +45,10 @@ export function rayBounce(context: CanvasRenderingContext2D) {
     drawLine(context, bound, "black");
   }
 
-  for (const ray of rays) {
+  for (const { ray, origin } of rays) {
     traceRayWithDots({
       context,
-      start: Vector.zero,
+      start: origin,
       startVelocity: ray,
       dotsCount: 10000,
       startColor: HslaColor.random(),
@@ -67,6 +67,10 @@ export function getRandomVelocity() {
     randomInt(1, 10) * ySign
   );
   return startVelocity;
+}
+
+async function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function traceRayWithDots({
@@ -92,7 +96,7 @@ export function traceRayWithDots({
   for (let i = 0; i < dotsCount; i++) {
     const color = startColor.blend(endColor, i / dotsCount);
 
-    const newPotentialPosition = position.add(velocity);
+    const newPotentialPosition = position.add(velocity).toGridCoordinates();
     const collision = grid.checkCollision(position, newPotentialPosition);
     if (collision) {
       drawDot(context, collision.position, color.toString(), 15);
@@ -182,37 +186,6 @@ export class Vector {
     return Math.atan2(this.y, this.x);
   }
 
-  // add(other: Vector) {
-  //   this.x += other.x;
-  //   this.y += other.y;
-  //   return this;
-  // }
-
-  // subtract(other: Vector) {
-  //   this.x -= other.x;
-  //   this.y -= other.y;
-  //   return this;
-  // }
-
-  // scale(scalar: number) {
-  //   this.x *= scalar;
-  //   this.y *= scalar;
-  //   return this;
-  // }
-
-  // clamp(min: number, max: number) {
-  //   this.x = Math.min(max, Math.max(min, this.x));
-  //   this.y = Math.min(max, Math.max(min, this.y));
-  //   return this;
-  // }
-
-  // normalize() {
-  //   const length = this.length();
-  //   this.x /= length;
-  //   this.y /= length;
-  //   return this;
-  // }
-
   add(other: Vector) {
     return new Vector(this.x + other.x, this.y + other.y);
   }
@@ -239,6 +212,10 @@ export class Vector {
 
   clone() {
     return new Vector(this.x, this.y);
+  }
+
+  toGridCoordinates() {
+    return Vector.gridCoordinates(this.x, this.y);
   }
 
   static zero = new Vector(0, 0);
@@ -348,6 +325,15 @@ function* iterateOnPathBetweenPointsWithoutJumpingDiagonally(
 
 function reflect(velocity: Vector, normal: Vector) {
   return velocity.subtract(normal.scale(2 * velocity.dotProduct(normal)));
+
+  // // use normal or normal turned 180 degrees, depending on whether
+  // // the velocity is going towards the normal or away from it
+  // const dotProduct = velocity.dotProduct(normal);
+  // if (dotProduct < 0) {
+  //   return velocity.subtract(normal.scale(2 * dotProduct));
+  // }
+
+  // return velocity.add(normal.scale(2 * dotProduct));
 }
 
 function getGetNormal(normal: Vector) {
@@ -395,4 +381,11 @@ export function drawLine(
   context.moveTo(start.x, start.y);
   context.lineTo(end.x, end.y);
   context.stroke();
+}
+
+export function getRandomCoordinates(context: CanvasRenderingContext2D) {
+  return Vector.gridCoordinates(
+    randomInt(-context.canvas.width / 2, context.canvas.width / 2),
+    randomInt(-context.canvas.height / 2, context.canvas.height / 2)
+  );
 }
