@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  output: "export",  // <=== enables static exports
+  reactStrictMode: true,
+  basePath: '/canvas'
+};
 
-export default nextConfig;
+module.exports = nextConfig;
